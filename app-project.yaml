@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: 2-tier-application
+  namespace: argocd
+spec:
+  description: Project for 2-tier application i.e. frontend and backend workloads
+  sourceRepos:
+    - https://github.com/PratapSingh13/sample-application-argocd-config.git
+  destinations:
+    - namespace: 2-tier-*
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: argoproj.io
+      kind: Application
+  clusterResourceBlacklist:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  roles:
+    - name: dev-readonly
+      description: Read-only access for developers
+      policies:
+        - p, proj:2-tier-application:dev-readonly, applications, get, 2-tier-application/*, allow
+      groups:
+        - app1-devs
+    - name: platform-admin
+      description: Full control for platform team
+      policies:
+        - p, proj:2-tier-application:platform-admin, applications, *, 2-tier-application/*, allow
+      groups:
+        - platform-team
